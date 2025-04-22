@@ -2,6 +2,9 @@
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg, stddev, desc
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Initialisation du SparkContext
 sc = SparkContext("local", "Analyse Consommation Eau")
@@ -148,3 +151,65 @@ conservation_impact_df.show()
 
 # Fin du traitement
 print("\n==> Partie 2 terminée : Analyse des données avec DataFrame et SQL effectuée avec succès.")
+
+
+
+
+
+# Supposons que les DataFrames de la partie précédente ont déjà été créés
+# Si tu ne les as pas encore, voici comment tu peux les générer avec des requêtes SQL
+# stable_consumption_df = spark.sql(query_stable_consumption)
+# arid_regions_df = spark.sql(query_arid_regions)
+# peaks_df = spark.sql(query_peaks)
+# developed_vs_developing_df = spark.sql(query_developed_vs_developing)
+
+# Conversion des DataFrames Spark en DataFrame Pandas pour la visualisation
+stable_consumption_df = stable_consumption_df.toPandas()
+arid_regions_df = arid_regions_df.toPandas()
+peaks_df = peaks_df.toPandas()
+developed_vs_developing_df = developed_vs_developing_df.toPandas()
+
+# 1. Visualisation des pays avec la consommation d’eau la plus stable
+plt.figure(figsize=(10, 6))
+sns.barplot(x="Avg_Consumption", y="Country", data=stable_consumption_df, palette="viridis")
+plt.title("Pays avec la consommation d'eau la plus stable")
+plt.xlabel("Consommation moyenne d'eau (m3)")
+plt.ylabel("Pays")
+plt.show()
+
+# 2. Visualisation des tendances de consommation dans les régions arides
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x="Avg_Rainfall", y="Avg_Consumption", data=arid_regions_df, hue="Country", palette="coolwarm", s=100)
+plt.title("Tendances de consommation dans les régions arides")
+plt.xlabel("Précipitations moyennes (mm/an)")
+plt.ylabel("Consommation moyenne d'eau (m3)")
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.show()
+
+# 3. Visualisation des pics de consommation d'eau
+plt.figure(figsize=(12, 6))
+sns.lineplot(data=peaks_df, x="Year", y="Total_Consumption", hue="Country", markers=True)
+plt.title("Pics de consommation d'eau")
+plt.xlabel("Année")
+plt.ylabel("Consommation d'eau (m3)")
+plt.legend(title="Pays", bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.show()
+
+# 4. Visualisation de la comparaison entre pays développés et en développement
+plt.figure(figsize=(8, 6))
+sns.barplot(x="Country_Type", y="Avg_Consumption", data=developed_vs_developing_df, palette="Set2")
+plt.title("Comparaison de la consommation d'eau entre pays développés et en développement")
+plt.xlabel("Type de pays")
+plt.ylabel("Consommation moyenne d'eau (m3)")
+plt.show()
+
+# Sauvegarder les visualisations (optionnel, si tu veux les exporter)
+# Exemple pour sauvegarder un graphique à partir de la première visualisation
+plt.figure(figsize=(10, 6))
+sns.barplot(x="Avg_Consumption", y="Country", data=stable_consumption_df, palette="viridis")
+plt.title("Pays avec la consommation d'eau la plus stable")
+plt.xlabel("Consommation moyenne d'eau (m3)")
+plt.ylabel("Pays")
+plt.savefig("/dbfs/mnt/chemin/vers/le/dossier/consommation_stable.png")
+
+# Vous pouvez répéter ce processus pour d'autres visualisations, en changeant simplement le nom du fichier pour chaque graphique
